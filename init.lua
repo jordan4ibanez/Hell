@@ -113,7 +113,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	
 	--write it to world
 	vm:write_to_map(data)
-
+	vm:update_map()
 	local chugent = math.ceil((os.clock() - t1) * 1000) --grab how long it took
 	print ("Hell generated chunk in "..chugent.." ms") --tell people how long
 end)
@@ -146,6 +146,17 @@ minetest.register_globalstep(function(dtime)
 end)
 
 
+--remove water when spawned in hell
+minetest.register_lbm({
+	name = "hell:water_removal",
+	nodenames = {"default:water_source", "default:water_flowing"},
+	action = function(pos, node)
+		if pos.y < YMAX and pos.y > YMIN then
+			minetest.set_node(pos, {name = "air"})
+		end
+	end,
+})
+
 minetest.register_node("hell:netherrack", {
 	description = "Netherrack",
 	tiles = {"nether_rack.png"},
@@ -155,3 +166,4 @@ minetest.register_node("hell:netherrack", {
 	paramtype = "light",
 	sounds = default.node_sound_stone_defaults(),
 })
+
