@@ -4,8 +4,11 @@ caverealms = {}
 hell = {}
 hell.sky_color_timer = 0
 
+-- -0.5 massive lava sea and lots of space
+-- 0 for huge caves
+-- 0.5 for smaller caves
+local TCAVE = 0
 
-local TCAVE = 0 --0.5 -- Cave threshold. 1 = small rare caves, 0.5 = 1/3rd ground volume, 0 = 1/2 ground volume
 local BLEND = 128 -- Cave blend distance near YMIN, YMAX
 
 --local DM_TOP = caverealms.config.dm_top -- -4000 --level at which Dungeon Master Realms start to appear
@@ -23,27 +26,6 @@ local np_cave = {
 	persist = 0.63
 }
 
--- 3D noise for wave
-
-local np_wave = {
-	offset = 0,
-	scale = 1,
-	spread = {x=256, y=256, z=256},
-	seed = -400000000089,
-	octaves = 3,
-	persist = 0.67
-}
-
--- 2D noise for biome
-
-local np_biome = {
-	offset = 0,
-	scale = 1,
-	spread = {x=250, y=250, z=250},
-	seed = 9130,
-	octaves = 3,
-	persist = 0.5
-}
 
 -- Stuff
 
@@ -78,7 +60,6 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	
 	--grab content IDs
 	local c_air = minetest.get_content_id("air")
-	local c_stone = minetest.get_content_id("default:stone")
 	local c_lava = minetest.get_content_id("default:lava_source")
 	local c_netherrack = minetest.get_content_id("hell:netherrack")
 	
@@ -87,15 +68,11 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	local chulens = {x=sidelen, y=sidelen, z=sidelen} --table of chunk edges
 	local chulens2D = {x=sidelen, y=sidelen, z=1}
 	local minposxyz = {x=x0, y=y0, z=z0} --bottom corner
-	local minposxz = {x=x0, y=z0} --2D bottom corner
 	
 	local nvals_cave = minetest.get_perlin_map(np_cave, chulens):get3dMap_flat(minposxyz) --cave noise for structure
-	--local nvals_wave = minetest.get_perlin_map(np_wave, chulens):get3dMap_flat(minposxyz) --wavy structure of cavern ceilings and floors
-	--local nvals_biome = minetest.get_perlin_map(np_biome, chulens2D):get2dMap_flat({x=x0+150, y=z0+50}) --2D noise for biomes (will be 3D humidity/temp later)
 	
 	local nixyz = 1 --3D node index
-	local nixz = 1 --2D node index
-	local nixyz2 = 1 --second 3D index for second loop
+	
 	--generate lava check
 	local lava_generation = false
 	if maxp.y < lava_level then
@@ -104,24 +81,12 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	
 	for z = z0, z1 do -- for each xy plane progressing northwards
 		--structure loop
-		for y = y0, y1 do -- for each x row progressing upwards
-			local tcave --declare variable
-			--determine the overal cave threshold
-			--if y < yblmin then
-			--	tcave = TCAVE + ((yblmin - y) / BLEND) ^ 2
-			--elseif y > yblmax then
-			--	tcave = TCAVE + ((y - yblmax) / BLEND) ^ 2
-			--else
-			--	tcave = TCAVE
-			--end
-			
-			--EXPERIMENTAL
-			tcave = TCAVE
-			
+		for y = y0, y1 do -- for each x row progressing upwards		
 			local vi = area:index(x0, y, z) --current node index
 			--print(nvals_cave[nixyz]*10000, tcave)
 			for x = x0, x1 do --Times 10000 for massive caves
-				if nvals_cave[nixyz]*10000 > tcave then --if node falls within cave threshold
+				--print(nvals_cave[nixyz])
+				if nvals_cave[nixyz] > TCAVE then --if node falls within cave threshold
 					--if below lava level then generate lava
 					if lava_generation == true then
 						data[vi] = c_lava
@@ -137,7 +102,6 @@ minetest.register_on_generated(function(minp, maxp, seed)
 				vi = vi + 1
 			end
 		end
-		nixz = nixz + sidelen --shift the 2D index up a layer
 	end
 	
 	--send data back to voxelmanip
