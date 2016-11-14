@@ -62,7 +62,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	end
 
 	--easy reference to commonly used values
-	--local t1 = os.clock()
+	local t1 = os.clock()
 	local x1 = maxp.x
 	local y1 = maxp.y
 	local z1 = maxp.z
@@ -107,13 +107,17 @@ minetest.register_on_generated(function(minp, maxp, seed)
 		for y = y0, y1 do -- for each x row progressing upwards
 			local tcave --declare variable
 			--determine the overal cave threshold
-			if y < yblmin then
-				tcave = TCAVE + ((yblmin - y) / BLEND) ^ 2
-			elseif y > yblmax then
-				tcave = TCAVE + ((y - yblmax) / BLEND) ^ 2
-			else
-				tcave = TCAVE
-			end
+			--if y < yblmin then
+			--	tcave = TCAVE + ((yblmin - y) / BLEND) ^ 2
+			--elseif y > yblmax then
+			--	tcave = TCAVE + ((y - yblmax) / BLEND) ^ 2
+			--else
+			--	tcave = TCAVE
+			--end
+			
+			--EXPERIMENTAL
+			tcave = TCAVE
+			
 			local vi = area:index(x0, y, z) --current node index
 			--print(nvals_cave[nixyz]*10000, tcave)
 			for x = x0, x1 do --Times 10000 for massive caves
@@ -138,14 +142,16 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	
 	--send data back to voxelmanip
 	vm:set_data(data)
+	
 	--calc lighting
-	vm:set_lighting({day=0, night=0})
-	vm:calc_lighting()
+	--vm:set_lighting({day=1, night=0})
+	--vm:calc_lighting()
+	
 	--write it to world
 	vm:write_to_map(data)
 
-	--local chugent = math.ceil((os.clock() - t1) * 1000) --grab how long it took
-	--print ("[caverealms] "..chugent.." ms") --tell people how long
+	local chugent = math.ceil((os.clock() - t1) * 1000) --grab how long it took
+	print ("Hell generated chunk in "..chugent.." ms") --tell people how long
 end)
 
 --the player's default sky color
