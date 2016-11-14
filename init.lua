@@ -115,6 +115,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 				tcave = TCAVE
 			end
 			local vi = area:index(x0, y, z) --current node index
+			--print(nvals_cave[nixyz]*10000, tcave)
 			for x = x0, x1 do --Times 10000 for massive caves
 				if nvals_cave[nixyz]*10000 > tcave then --if node falls within cave threshold
 					--if below lava level then generate lava
