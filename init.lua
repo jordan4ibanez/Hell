@@ -168,7 +168,7 @@ minetest.register_node("hell:soul_stone", {
 })
 
 portal.register_filler("hell:portal_filler","Hell Portal Filler","hell_portal.png","hell_portal_particle.png",{a = 180, r = 128, g = 0, b = 128})
-portal.register_portal("fire:basic_flame","default:obsidian","hell:portal_filler")
+portal.register_portal("default:torch","default:obsidian","hell:portal_filler")
 
 minetest.register_abm({
 	nodenames = {"hell:portal_filler"},
