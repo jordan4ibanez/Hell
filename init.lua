@@ -3,7 +3,7 @@
 caverealms = {}
 hell = {}
 hell.sky_color_timer = 0
-
+hell.player_teleporting = {}
 -- -0.5 massive lava sea and lots of space
 -- 0 for huge caves
 -- 0.5 for smaller caves
@@ -184,26 +184,60 @@ minetest.register_abm({
 	end,
 })
 
+--used for teleporting player
 hell.teleport_player = function(player,pos)
-	pos.x = pos.x + math.random(-100,100)
-	pos.z = pos.z + math.random(-100,100)
-	pos.y = math.random(-22000,-25000)
-	
-	
-	minetest.forceload_block(pos,true)
-	
-	player:set_physics_override({
-			gravity = 0,
-			jump = 0,
-			speed = 0,
-		})
-	player:setpos(pos)
-	minetest.after(1, function(player, pos)
-		minetest.set_node({x=pos.x,y=pos.y-1,z=pos.z}, {name="default:obsidian"})
+	if hell.player_teleporting[player:get_player_name()] == nil then
+		hell.player_teleporting[player:get_player_name()] = true
+		local pos2 = player:getpos()
+		pos.x = pos.x + math.random(-100,100)
+		pos.z = pos.z + math.random(-100,100)
+		pos.y = math.random(-22000,-25000)
+		
+		
+		minetest.forceload_block(pos,true)
+		
 		player:set_physics_override({
-			gravity = 1,
-			jump = 1,
-			speed = 1,
+				gravity = 0,
+				jump = 0,
+				speed = 0,
+			})
+		
+		minetest.sound_play("hell_teleport", {
+			to_player = player,
+			gain = 2.0,
 		})
-	end, player, pos)
+		
+		minetest.add_particlespawner({
+			amount = 500,
+			time = 2.5,
+			minpos = {x = pos2.x, y = pos2.y + 1.6, z = pos2.z},
+			maxpos = {x = pos2.x, y = pos2.y + 1.6, z = pos2.z},
+			minvel = {x = -0.8, y = -0.8, z = -0.8},
+			maxvel = {x = 0.8, y = 0.8, z = 0.8},
+			minacc = {x=0, y=0, z=0},
+			maxacc = {x=0, y=0, z=0},
+			minexptime = 0.5,
+			maxexptime = 1,
+			minsize = 1,
+			maxsize = 1,
+			collisiondetection = false,
+			vertical = false,
+			texture = "hell_portal_particle.png",
+		})
+		minetest.after(2.5, function(player, pos)
+			
+			minetest.forceload_block(pos,true)
+			minetest.set_node({x=pos.x,y=pos.y+1,z=pos.z}, {name="air"})
+			minetest.set_node({x=pos.x,y=pos.y,z=pos.z}, {name="air"})
+			minetest.set_node({x=pos.x,y=pos.y-1,z=pos.z}, {name="default:obsidian"})
+			
+			player:setpos(pos)
+			player:set_physics_override({
+				gravity = 1,
+				jump = 1,
+				speed = 1,
+			})
+			hell.player_teleporting[player:get_player_name()] = nil
+		end, player, pos)
+	end
 end
