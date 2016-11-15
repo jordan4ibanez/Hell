@@ -61,7 +61,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	--grab content IDs
 	local c_air = minetest.get_content_id("air")
 	local c_lava = minetest.get_content_id("default:lava_source")
-	local c_netherrack = minetest.get_content_id("hell:netherrack")
+	local c_soul_stone = minetest.get_content_id("hell:soul_stone")
 	
 	--mandatory values
 	local sidelen = x1 - x0 + 1 --length of a mapblock
@@ -95,7 +95,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 					end
 				else
 					--create cave structure
-					data[vi] = c_netherrack
+					data[vi] = c_soul_stone
 				end
 				--increment indices
 				nixyz = nixyz + 1
@@ -157,7 +157,7 @@ minetest.register_lbm({
 	end,
 })
 
-minetest.register_node("hell:netherrack", {
+minetest.register_node("hell:soul_stone", {
 	description = "Netherrack",
 	tiles = {"nether_rack.png"},
 	is_ground_content = true,
@@ -167,3 +167,43 @@ minetest.register_node("hell:netherrack", {
 	sounds = default.node_sound_stone_defaults(),
 })
 
+portal.register_filler("hell:portal_filler","Hell Portal Filler","hell_portal.png","hell_portal_particle.png",{a = 180, r = 128, g = 0, b = 128})
+portal.register_portal("fire:basic_flame","default:obsidian","hell:portal_filler")
+
+minetest.register_abm({
+	nodenames = {"hell:portal_filler"},
+	interval = 1,
+	chance = 1,
+	action = function(pos, node)
+		for _, obj in ipairs(minetest.get_objects_inside_radius(pos, 1)) do
+			if obj:is_player() then
+				print("start teleport sequence")
+				hell.teleport_player(obj, pos)
+			end
+		end
+	end,
+})
+
+hell.teleport_player = function(player,pos)
+	pos.x = pos.x + math.random(-100,100)
+	pos.z = pos.z + math.random(-100,100)
+	pos.y = math.random(-22000,-25000)
+	
+	
+	minetest.forceload_block(pos,true)
+	
+	player:set_physics_override({
+			gravity = 0,
+			jump = 0,
+			speed = 0,
+		})
+	player:setpos(pos)
+	minetest.after(1, function(player, pos)
+		minetest.set_node({x=pos.x,y=pos.y-1,z=pos.z}, {name="default:obsidian"})
+		player:set_physics_override({
+			gravity = 1,
+			jump = 1,
+			speed = 1,
+		})
+	end, player, pos)
+end
