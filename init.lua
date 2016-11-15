@@ -192,10 +192,7 @@ hell.teleport_player = function(player,pos)
 		pos.x = pos.x + math.random(-100,100)
 		pos.z = pos.z + math.random(-100,100)
 		pos.y = math.random(-22000,-25000)
-		
-		
-		minetest.forceload_block(pos,true)
-		
+				
 		player:set_physics_override({
 				gravity = 0,
 				jump = 0,
@@ -208,7 +205,7 @@ hell.teleport_player = function(player,pos)
 		})
 		
 		minetest.add_particlespawner({
-			amount = 500,
+			amount = 1000,
 			time = 2.5,
 			minpos = {x = pos2.x, y = pos2.y + 1.6, z = pos2.z},
 			maxpos = {x = pos2.x, y = pos2.y + 1.6, z = pos2.z},
@@ -224,20 +221,25 @@ hell.teleport_player = function(player,pos)
 			vertical = false,
 			texture = "hell_portal_particle.png",
 		})
+		--move the player and allow world to load before releasing them
 		minetest.after(2.5, function(player, pos)
-			
+			player:setpos(pos)
+		end, player, pos)
+		
+		minetest.after(3.5, function(player, pos)
 			minetest.forceload_block(pos,true)
 			minetest.set_node({x=pos.x,y=pos.y+1,z=pos.z}, {name="air"})
 			minetest.set_node({x=pos.x,y=pos.y,z=pos.z}, {name="air"})
 			minetest.set_node({x=pos.x,y=pos.y-1,z=pos.z}, {name="default:obsidian"})
 			
-			player:setpos(pos)
 			player:set_physics_override({
 				gravity = 1,
 				jump = 1,
 				speed = 1,
 			})
 			hell.player_teleporting[player:get_player_name()] = nil
+			minetest.forceload_free_block(pos,true)
+			
 		end, player, pos)
 	end
 end
