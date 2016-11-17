@@ -29,7 +29,7 @@ local np_cave = {
 
 -- Stuff
 
-subterrain = {}
+
 local YMAX = -20000
 local YMIN = -30000
 local lava_level = -25000
@@ -105,15 +105,18 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	end
 	
 	--send data back to voxelmanip
+	
 	vm:set_data(data)
 	
 	--calc lighting
 	--vm:set_lighting({day=1, night=0})
 	--vm:calc_lighting()
-	
+	--generate ores
+	minetest.generate_ores(vm, minp, maxp)
 	--write it to world
 	vm:write_to_map(data)
 	vm:update_map()
+	
 	local chugent = math.ceil((os.clock() - t1) * 1000) --grab how long it took
 	print ("Hell generated chunk in "..chugent.." ms") --tell people how long
 end)
@@ -156,9 +159,9 @@ minetest.register_lbm({
 		end
 	end,
 })
-
+--nodes
 minetest.register_node("hell:soul_stone", {
-	description = "Netherrack",
+	description = "Soul Stone",
 	tiles = {"nether_rack.png"},
 	is_ground_content = true,
 	groups = {cracky = 3, level = 2},
@@ -166,7 +169,127 @@ minetest.register_node("hell:soul_stone", {
 	paramtype = "light",
 	sounds = default.node_sound_stone_defaults(),
 })
-
+--ore
+minetest.register_node("hell:hell_coal", {
+	description = "Hell Coal Ore",
+	tiles = {"nether_rack.png^default_mineral_coal.png"},
+	groups = {cracky = 3},
+	drop = 'default:coal_lump 4',
+	light_source = 10,
+	paramtype = "light",
+	sounds = default.node_sound_stone_defaults(),
+})
+minetest.register_node("hell:hell_iron", {
+	description = "Hell Iron Ore",
+	tiles = {"nether_rack.png^default_mineral_iron.png"},
+	groups = {cracky = 2},
+	light_source = 10,
+	paramtype = "light",
+	drop = 'default:iron_lump 4',
+	sounds = default.node_sound_stone_defaults(),
+})
+minetest.register_node("hell:hell_copper", {
+	description = "Hell Copper Ore",
+	tiles = {"nether_rack.png^default_mineral_copper.png"},
+	groups = {cracky = 2},
+	light_source = 10,
+	paramtype = "light",
+	drop = 'default:copper_lump 4',
+	sounds = default.node_sound_stone_defaults(),
+})
+minetest.register_node("hell:hell_mese", {
+	description = "Hell Mese Ore",
+	tiles = {"nether_rack.png^default_mineral_mese.png"},
+	groups = {cracky = 1},
+	light_source = 10,
+	paramtype = "light",
+	drop = "default:mese_crystal 4",
+	sounds = default.node_sound_stone_defaults(),
+})
+minetest.register_node("hell:hell_gold", {
+	description = "Hell Gold Ore",
+	tiles = {"nether_rack.png^default_mineral_gold.png"},
+	groups = {cracky = 2},
+	light_source = 10,
+	paramtype = "light",
+	drop = "default:gold_lump 4",
+	sounds = default.node_sound_stone_defaults(),
+})
+minetest.register_node("hell:hell_diamond", {
+	description = "Hell Diamond Ore",
+	tiles = {"nether_rack.png^default_mineral_diamond.png"},
+	groups = {cracky = 1},
+	light_source = 10,
+	paramtype = "light",
+	drop = "default:diamond 4",
+	sounds = default.node_sound_stone_defaults(),
+})
+--ore registration
+minetest.register_ore({
+	ore_type       = "scatter",
+	ore            = "hell:hell_coal",
+	wherein        = "hell:soul_stone",
+	clust_scarcity = 8 * 8 * 8,
+	clust_num_ores = 9,
+	clust_size     = 3,
+	y_min          = -30000,
+	y_max          = -20000,
+})
+	minetest.register_ore({
+		ore_type       = "scatter",
+		ore            = "hell:hell_iron",
+		wherein        = "hell:soul_stone",
+		clust_scarcity = 9 * 9 * 9,
+		clust_num_ores = 12,
+		clust_size     = 3,
+		y_min          = -30000,
+		y_max          = -20000,
+	})
+	
+	minetest.register_ore({
+		ore_type       = "scatter",
+		ore            = "hell:hell_copper",
+		wherein        = "hell:soul_stone",
+		clust_scarcity = 9 * 9 * 9,
+		clust_num_ores = 5,
+		clust_size     = 3,
+		y_min          = -30000,
+		y_max          = -20000,
+	})
+	minetest.register_ore({
+		ore_type       = "scatter",
+		ore            = "hell:hell_gold",
+		wherein        = "hell:soul_stone",
+		clust_scarcity = 13 * 13 * 13,
+		clust_num_ores = 5,
+		clust_size     = 3,
+		y_min          = -30000,
+		y_max          = -20000,
+	})
+	minetest.register_ore({
+		ore_type       = "scatter",
+		ore            = "hell:hell_mese",
+		wherein        = "hell:soul_stone",
+		clust_scarcity = 14 * 14 * 14,
+		clust_num_ores = 5,
+		clust_size     = 3,
+		y_min          = -30000,
+		y_max          = -20000,
+	})
+	minetest.register_ore({
+		ore_type       = "scatter",
+		ore            = "hell:hell_diamond",
+		wherein        = "hell:soul_stone",
+		clust_scarcity = 15 * 15 * 15,
+		clust_num_ores = 4,
+		clust_size     = 3,
+		y_min          = -30000,
+		y_max          = -20000,
+	})
+	
+	
+	
+	
 portal.register_filler("hell:portal_filler","Hell Portal Filler","hell_portal.png","hell_portal_particle.png",{a = 180, r = 128, g = 0, b = 128})
 portal.register_portal("default:torch","default:obsidian","hell:portal_filler")
 
