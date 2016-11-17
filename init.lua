@@ -271,17 +271,6 @@ minetest.register_node("hell:hell_diamond", {
 	end,
 })
 --ore registration
-local ore_explosion = {
-	name = "hell:ore_explosion",
-	description = "Ore Explosion (you hacker you!)",
-	radius = 5,
-	tiles = {
-		side = "nether_rack.png",
-		top = "nether_rack.png",
-		bottom = "nether_rack.png",
-		burning = "nether_rack.png"
-	},
-}
 
 tnt.register_tnt(def)
 minetest.register_ore({
