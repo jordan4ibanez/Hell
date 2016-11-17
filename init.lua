@@ -113,7 +113,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	--vm:calc_lighting()
 	--generate ores
 	minetest.generate_ores(vm, minp, maxp)
-	minetest.generate_decorations(vm, minp, maxp)
+	--minetest.generate_decorations(vm, minp, maxp)
 	--write it to world
 	vm:write_to_map(data)
 	vm:update_map()
