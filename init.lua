@@ -113,6 +113,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	--vm:calc_lighting()
 	--generate ores
 	minetest.generate_ores(vm, minp, maxp)
+	minetest.generate_decorations(vm, minp, maxp)
 	--write it to world
 	vm:write_to_map(data)
 	vm:update_map()
@@ -170,6 +171,33 @@ minetest.register_node("hell:soul_stone", {
 	sounds = default.node_sound_stone_defaults(),
 })
 --ore
+local def = {
+	name = "hell:ore_explosion",
+	description = "Ore Explosion (you hacker you!)",
+	radius = 6,
+	tiles = {
+		side = "nether_rack.png",
+		top = "nether_rack.png",
+		bottom = "nether_rack.png",
+		burning = "nether_rack.png"
+	},
+}
+
+tnt.register_tnt(def)
+--ore explosion function
+hell.explode_ore = function(pos)
+	if math.random() > 0.5 then
+		minetest.sound_play("tnt_ignite", {
+			max_hear_distance = 20,
+			pos = pos,
+			gain = 10.0,
+		})
+		minetest.after(3, function(pos)
+			tnt.boom(pos, def)
+		end, pos)
+	end
+end
+
 minetest.register_node("hell:hell_coal", {
 	description = "Hell Coal Ore",
 	tiles = {"nether_rack.png^default_mineral_coal.png"},
@@ -178,6 +206,9 @@ minetest.register_node("hell:hell_coal", {
 	light_source = 10,
 	paramtype = "light",
 	sounds = default.node_sound_stone_defaults(),
+	after_dig_node = function(pos, oldnode, oldmetadata, digger)
+		hell.explode_ore(pos)
+	end,
 })
 minetest.register_node("hell:hell_iron", {
 	description = "Hell Iron Ore",
@@ -187,6 +218,9 @@ minetest.register_node("hell:hell_iron", {
 	paramtype = "light",
 	drop = 'default:iron_lump 4',
 	sounds = default.node_sound_stone_defaults(),
+	after_dig_node = function(pos, oldnode, oldmetadata, digger)
+		hell.explode_ore(pos)
+	end,
 })
 minetest.register_node("hell:hell_copper", {
 	description = "Hell Copper Ore",
@@ -196,6 +230,9 @@ minetest.register_node("hell:hell_copper", {
 	paramtype = "light",
 	drop = 'default:copper_lump 4',
 	sounds = default.node_sound_stone_defaults(),
+	after_dig_node = function(pos, oldnode, oldmetadata, digger)
+		hell.explode_ore(pos)
+	end,
 })
 minetest.register_node("hell:hell_mese", {
 	description = "Hell Mese Ore",
@@ -205,6 +242,9 @@ minetest.register_node("hell:hell_mese", {
 	paramtype = "light",
 	drop = "default:mese_crystal 4",
 	sounds = default.node_sound_stone_defaults(),
+	after_dig_node = function(pos, oldnode, oldmetadata, digger)
+		hell.explode_ore(pos)
+	end,
 })
 minetest.register_node("hell:hell_gold", {
 	description = "Hell Gold Ore",
@@ -214,6 +254,9 @@ minetest.register_node("hell:hell_gold", {
 	paramtype = "light",
 	drop = "default:gold_lump 4",
 	sounds = default.node_sound_stone_defaults(),
+	after_dig_node = function(pos, oldnode, oldmetadata, digger)
+		hell.explode_ore(pos)
+	end,
 })
 minetest.register_node("hell:hell_diamond", {
 	description = "Hell Diamond Ore",
@@ -223,8 +266,24 @@ minetest.register_node("hell:hell_diamond", {
 	paramtype = "light",
 	drop = "default:diamond 4",
 	sounds = default.node_sound_stone_defaults(),
+	after_dig_node = function(pos, oldnode, oldmetadata, digger)
+		hell.explode_ore(pos)
+	end,
 })
 --ore registration
+local ore_explosion = {
+	name = "hell:ore_explosion",
+	description = "Ore Explosion (you hacker you!)",
+	radius = 5,
+	tiles = {
+		side = "nether_rack.png",
+		top = "nether_rack.png",
+		bottom = "nether_rack.png",
+		burning = "nether_rack.png"
+	},
+}
+
+tnt.register_tnt(def)
 minetest.register_ore({
 	ore_type       = "scatter",
 	ore            = "hell:hell_coal",
