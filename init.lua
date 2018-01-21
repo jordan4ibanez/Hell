@@ -21,15 +21,13 @@ local np_cave = {
 	offset = 0,
 	scale = 1,
 	spread = {x=512, y=256, z=512}, -- squashed 2:1
-	seed = 59033,
+	seed = minetest.get_mapgen_setting("seed"),
 	octaves = 6,
 	persist = 0.63
 }
 
 
--- Stuff
-
-
+-- Generate Hell
 local YMAX = -20000
 local YMIN = -30000
 local lava_level = -25000
@@ -108,12 +106,13 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	
 	vm:set_data(data)
 	
-	--calc lighting
+	--calc lighting (These two commented values add 200ms to generation)
 	--vm:set_lighting({day=1, night=0})
 	--vm:calc_lighting()
+	
 	--generate ores
 	minetest.generate_ores(vm, minp, maxp)
-	--minetest.generate_decorations(vm, minp, maxp)
+	minetest.generate_decorations(vm, minp, maxp)
 	--write it to world
 	vm:write_to_map(data)
 	vm:update_map()
@@ -362,7 +361,7 @@ hell.teleport_player = function(player,pos)
 		local pos2 = player:getpos()
 		pos.x = pos.x + math.random(-100,100)
 		pos.z = pos.z + math.random(-100,100)
-		pos.y = math.random(-22000,-25000)
+		pos.y = math.random(-25000,-22000)
 				
 		player:set_physics_override({
 				gravity = 0,
