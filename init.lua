@@ -4,6 +4,7 @@ caverealms = {}
 hell = {}
 hell.sky_color_timer = 0
 hell.player_teleporting = {}
+hell.player_teleporter_timer = 0
 -- -0.5 massive lava sea and lots of space
 -- 0 for huge caves
 -- 0.5 for smaller caves
@@ -117,8 +118,8 @@ minetest.register_on_generated(function(minp, maxp, seed)
 	vm:write_to_map(data)
 	vm:update_map()
 	
-	local chugent = math.ceil((os.clock() - t1) * 1000) --grab how long it took
-	print ("Hell generated chunk in "..chugent.." ms") --tell people how long
+	--local chugent = math.ceil((os.clock() - t1) * 1000) --grab how long it took
+	--print ("Hell generated chunk in "..chugent.." ms") --tell people how long
 end)
 
 --the player's default sky color
@@ -132,8 +133,10 @@ end)
 
 --this changes the player's sky color to red
 minetest.register_globalstep(function(dtime)
+
+	--GLOBAL TO CHANGE SKYBOX COLOR
 	hell.sky_color_timer = hell.sky_color_timer + dtime
-	if hell.sky_color_timer >= 10 then
+	if hell.sky_color_timer >= 3 then
 		for i, player in pairs(minetest.get_connected_players()) do
 			local pos = player:getpos().y
 			if pos < YMAX and pos > YMIN then
@@ -146,6 +149,35 @@ minetest.register_globalstep(function(dtime)
 		end
 		hell.sky_color_timer = 0
 	end
+	
+	--GLOBAL TO RESET HELL TELEPORTER REQUESTS
+	hell.player_teleporter_timer = hell.player_teleporter_timer + dtime
+	if hell.player_teleporter_timer >= 1 then --check through table
+		for player,data in pairs(hell.player_teleporting) do
+			--print(dump(player),dump(data))
+			
+			local playerpos = minetest.get_player_by_name(player):getpos()
+			
+			--i = player name (string)
+			--data = teleporting (bool)
+			--data = goalpos (floor)
+			
+			local xer = math.floor(playerpos.x+0.5)
+			local yer = math.floor(playerpos.y+0.5)
+			local zer = math.floor(playerpos.z+0.5)
+			if (data.goalpos.x == xer and data.goalpos.y == yer and data.goalpos.z == zer) == false then
+				hell.player_teleporting[player].goalpos = {x=xer,y=yer,z=zer}
+				--print(dump({x=xer,y=yer,z=zer}))
+				if minetest.get_node({x=xer,y=yer,z=zer}).name ~= "hell:portal_filler" then
+					hell.player_teleporting[player] = nil
+					--print("deleting "..player.." from teleporter request table")
+				end
+			end
+			
+		end
+		hell.player_teleporter_timer = 0
+	end
+	
 end)
 
 
@@ -342,13 +374,28 @@ portal.register_portal("default:torch","default:obsidian","hell:portal_filler")
 
 minetest.register_abm({
 	nodenames = {"hell:portal_filler"},
-	interval = 1,
+	interval = 4,
 	chance = 1,
 	action = function(pos, node)
+	
+		--allow all objects to teleport somehow
+	
+	
 		for _, obj in ipairs(minetest.get_objects_inside_radius(pos, 1)) do
 			if obj:is_player() then
-				print("start teleport sequence")
-				hell.teleport_player(obj, pos)
+				
+				--cancel the teleportation initialization
+				if hell.player_teleporting[obj:get_player_name()] then
+					print("canceling request, player is either teleported or request already accessed")
+					return
+				end
+				
+				
+				
+				local meta = minetest.get_meta(pos)
+				local newpos = minetest.string_to_pos(meta:get_string("teleport_pos"))
+				
+				hell.teleport_player(obj, newpos)
 			end
 		end
 	end,
@@ -356,23 +403,33 @@ minetest.register_abm({
 
 --used for teleporting player
 hell.teleport_player = function(player,pos)
+	--print(dump(pos))
+	
 	if hell.player_teleporting[player:get_player_name()] == nil then
-		hell.player_teleporting[player:get_player_name()] = true
+		
+		--document data in global table
+		hell.player_teleporting[player:get_player_name()] = {}
+		hell.player_teleporting[player:get_player_name()].teleporting = true
+		hell.player_teleporting[player:get_player_name()].goalpos = pos
+		
+	
 		local pos2 = player:getpos()
-		pos.x = pos.x + math.random(-100,100)
-		pos.z = pos.z + math.random(-100,100)
-		pos.y = math.random(-25000,-22000)
-				
+		
+		--[[
 		player:set_physics_override({
 				gravity = 0,
 				jump = 0,
 				speed = 0,
 			})
+		]]--
 		
 		minetest.sound_play("hell_teleport", {
 			to_player = player,
 			gain = 2.0,
 		})
+		
+		
+		--link to player
 		
 		minetest.add_particlespawner({
 			amount = 1000,
@@ -391,24 +448,17 @@ hell.teleport_player = function(player,pos)
 			vertical = false,
 			texture = "hell_portal_particle.png",
 		})
+		
 		--move the player and allow world to load before releasing them
 		minetest.after(2.5, function(player, pos)
-			player:setpos(pos)
+			player:setpos({x=pos.x,y=pos.y+0.5,z=pos.z})		
 		end, player, pos)
 		
+		
 		minetest.after(3.5, function(player, pos)
-			minetest.forceload_block(pos,true)
-			minetest.set_node({x=pos.x,y=pos.y+1,z=pos.z}, {name="air"})
-			minetest.set_node({x=pos.x,y=pos.y,z=pos.z}, {name="air"})
-			minetest.set_node({x=pos.x,y=pos.y-1,z=pos.z}, {name="default:obsidian"})
 			
-			player:set_physics_override({
-				gravity = 1,
-				jump = 1,
-				speed = 1,
-			})
-			hell.player_teleporting[player:get_player_name()] = nil
-			minetest.forceload_free_block(pos,true)
+			
+			--hell.player_teleporting[player:get_player_name()] = nil
 			
 		end, player, pos)
 	end
